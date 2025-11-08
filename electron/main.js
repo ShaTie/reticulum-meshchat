@@ -4,6 +4,18 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('node:path');
 
+// Debug logging to file
+const logFile = path.join(app.getPath('userData'), 'debug.log');
+function debugLog(...args) {
+    const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] ${message}\n`;
+    fs.appendFileSync(logFile, logMessage);
+    console.log(...args);
+}
+debugLog('=== Electron starting ===');
+debugLog('Log file:', logFile);
+
 // remember main window
 var mainWindow = null;
 
@@ -182,14 +194,32 @@ app.whenReady().then(async () => {
     const exeName = process.platform === "win32" ? "ReticulumMeshChat.exe" : "ReticulumMeshChat";
     var exe = path.join(__dirname, `build/exe/${exeName}`);
 
+    debugLog('[EXE SEARCH] __dirname:', __dirname);
+    debugLog('[EXE SEARCH] Looking for exe at:', exe);
+    debugLog('[EXE SEARCH] exe exists?', fs.existsSync(exe));
+
     // if exe doesn't exist, check ASAR unpacked directory (when asar is enabled)
     if(!fs.existsSync(exe)){
         exe = path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), `build/exe/${exeName}`);
+        debugLog('[EXE SEARCH] Trying ASAR unpacked path:', exe);
+        debugLog('[EXE SEARCH] exe exists?', fs.existsSync(exe));
     }
 
     // if dist exe doesn't exist, check local build
     if(!fs.existsSync(exe)){
         exe = path.join(__dirname, '..', `build/exe/${exeName}`);
+        debugLog('[EXE SEARCH] Trying local build path:', exe);
+        debugLog('[EXE SEARCH] exe exists?', fs.existsSync(exe));
+    }
+
+    debugLog('[EXE SEARCH] Final exe path:', exe);
+
+    // List files in __dirname to see what's actually there
+    try {
+        const dirContents = fs.readdirSync(__dirname);
+        debugLog('[EXE SEARCH] Contents of __dirname:', dirContents);
+    } catch(e) {
+        debugLog('[EXE SEARCH] Error reading __dirname:', e.message);
     }
 
     try {
@@ -212,10 +242,13 @@ app.whenReady().then(async () => {
         }
 
         // spawn executable
+        debugLog('[SPAWN] Spawning exe:', exe);
+        debugLog('[SPAWN] Args:', [...requiredArguments, ...userProvidedArguments]);
         exeChildProcess = await spawn(exe, [
             ...requiredArguments, // always provide required arguments
             ...userProvidedArguments, // also include any user provided arguments
         ]);
+        debugLog('[SPAWN] Spawned process with PID:', exeChildProcess.pid);
 
         // log stdout
         var stdoutLines = [];
@@ -251,6 +284,7 @@ app.whenReady().then(async () => {
 
         // log errors
         exeChildProcess.on('error', function(error) {
+            debugLog('[PROCESS ERROR]', error);
             log(error);
         });
 
