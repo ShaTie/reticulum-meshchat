@@ -182,6 +182,11 @@ app.whenReady().then(async () => {
     const exeName = process.platform === "win32" ? "ReticulumMeshChat.exe" : "ReticulumMeshChat";
     var exe = path.join(__dirname, `build/exe/${exeName}`);
 
+    // if exe doesn't exist, check ASAR unpacked directory (when asar is enabled)
+    if(!fs.existsSync(exe)){
+        exe = path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), `build/exe/${exeName}`);
+    }
+
     // if dist exe doesn't exist, check local build
     if(!fs.existsSync(exe)){
         exe = path.join(__dirname, '..', `build/exe/${exeName}`);
