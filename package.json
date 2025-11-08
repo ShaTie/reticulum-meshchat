@@ -7,7 +7,8 @@
     "watch": "npm run build-frontend -- --watch",
     "build-frontend": "vite build",
     "build-backend": "python setup.py build",
-    "build": "npm run build-frontend && npm run build-backend",
+    "copy-backend": "rm -rf electron/build/exe && cp -r build/exe electron/build/",
+    "build": "npm run build-frontend && npm run build-backend && npm run copy-backend",
     "electron-postinstall": "electron-builder install-app-deps",
     "electron": "npm run electron-postinstall && npm run build && electron .",
     "dist": "npm run electron-postinstall && npm run build && electron-builder --publish=never",
@@ -25,9 +26,14 @@
   "build": {
     "appId": "com.liamcottle.reticulummeshchat",
     "productName": "Reticulum MeshChat",
-    "asar": false,
+    "asar": true,
+    "asarUnpack": [
+      "electron/build/**/*"
+    ],
     "files": [
-      "electron/**/*"
+      "electron/**/*",
+      "public/**/*",
+      "package.json"
     ],
     "directories": {
       "buildResources": "electron/build"
@@ -41,20 +47,10 @@
       },
       "identity": null,
       "artifactName": "ReticulumMeshChat-v${version}-${os}-${arch}.${ext}",
-      "x64ArchFiles": "Contents/Resources/app/electron/build/exe/**/*",
       "extendInfo": {
         "NSMicrophoneUsageDescription": "Microphone access is only needed for Audio Calls",
         "com.apple.security.device.audio-input": true
-      },
-      "extraFiles": [
-        {
-          "from": "build/exe",
-          "to": "Resources/app/electron/build/exe",
-          "filter": [
-            "**/*"
-          ]
-        }
-      ]
+      }
     },
     "win": {
       "artifactName": "ReticulumMeshChat-v${version}-${os}.${ext}",
@@ -65,29 +61,11 @@
         {
           "target": "nsis"
         }
-      ],
-      "extraFiles": [
-        {
-          "from": "build/exe",
-          "to": "Resources/app/electron/build/exe",
-          "filter": [
-            "**/*"
-          ]
-        }
       ]
     },
     "linux": {
       "artifactName": "ReticulumMeshChat-v${version}-${os}.${ext}",
-      "target": "AppImage",
-      "extraFiles": [
-        {
-          "from": "build/exe",
-          "to": "resources/app/electron/build/exe",
-          "filter": [
-            "**/*"
-          ]
-        }
-      ]
+      "target": "AppImage"
     },
     "dmg": {
       "writeUpdateInfo": false
