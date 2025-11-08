@@ -35,9 +35,6 @@
       "public/**/*",
       "package.json"
     ],
-    "directories": {
-      "buildResources": "electron/build"
-    },
     "mac": {
       "target": {
         "target": "dmg",
