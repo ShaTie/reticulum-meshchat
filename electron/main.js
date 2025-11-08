@@ -194,30 +194,27 @@ app.whenReady().then(async () => {
     const exeName = process.platform === "win32" ? "ReticulumMeshChat.exe" : "ReticulumMeshChat";
 
     debugLog('[EXE SEARCH] __dirname:', __dirname);
+    debugLog('[EXE SEARCH] process.resourcesPath:', process.resourcesPath);
 
-    // IMPORTANT: Check ASAR unpacked directory FIRST!
-    // Executables cannot be run from inside ASAR archive, even though fs.existsSync() returns true for them.
-    // When asar is enabled, executables are in app.asar.unpacked, not app.asar
     var exe;
-    if(__dirname.includes('app.asar')){
-        // We're running from ASAR - use unpacked directory
-        exe = path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), `build/exe/${exeName}`);
-        debugLog('[EXE SEARCH] Running from ASAR, using unpacked path:', exe);
-    } else {
-        // Development mode or local build
-        exe = path.join(__dirname, `build/exe/${exeName}`);
-        debugLog('[EXE SEARCH] Not in ASAR, using regular path:', exe);
+
+    // In production (packaged app), Python exe is in Resources/python
+    if(process.resourcesPath && fs.existsSync(path.join(process.resourcesPath, 'python'))){
+        exe = path.join(process.resourcesPath, 'python', exeName);
+        debugLog('[EXE SEARCH] Production mode, using extraResources path:', exe);
+    }
+    // In development, use local build
+    else if(fs.existsSync(path.join(__dirname, '..', 'build', 'exe', exeName))){
+        exe = path.join(__dirname, '..', 'build', 'exe', exeName);
+        debugLog('[EXE SEARCH] Development mode, using local build:', exe);
+    }
+    // Fallback
+    else {
+        exe = path.join(__dirname, 'build', 'exe', exeName);
+        debugLog('[EXE SEARCH] Fallback path:', exe);
     }
 
     debugLog('[EXE SEARCH] exe exists?', fs.existsSync(exe));
-
-    // Fallback to parent directory (for local development builds)
-    if(!fs.existsSync(exe)){
-        exe = path.join(__dirname, '..', `build/exe/${exeName}`);
-        debugLog('[EXE SEARCH] Trying parent directory:', exe);
-        debugLog('[EXE SEARCH] exe exists?', fs.existsSync(exe));
-    }
-
     debugLog('[EXE SEARCH] Final exe path:', exe);
 
     // List files in __dirname to see what's actually there

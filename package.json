@@ -7,8 +7,7 @@
     "watch": "npm run build-frontend -- --watch",
     "build-frontend": "vite build",
     "build-backend": "python setup.py build",
-    "copy-backend": "rm -rf electron/build/exe && cp -r build/exe electron/build/",
-    "build": "npm run build-frontend && npm run build-backend && npm run copy-backend",
+    "build": "npm run build-frontend && npm run build-backend",
     "electron-postinstall": "electron-builder install-app-deps",
     "electron": "npm run electron-postinstall && npm run build && electron .",
     "dist": "npm run electron-postinstall && npm run build && electron-builder --publish=never",
@@ -27,11 +26,17 @@
     "appId": "com.liamcottle.reticulummeshchat",
     "productName": "Reticulum MeshChat",
     "asar": true,
-    "asarUnpack": [
-      "electron/build/**/*"
+    "extraResources": [
+      {
+        "from": "build/exe",
+        "to": "python",
+        "filter": ["**/*"]
+      }
     ],
     "files": [
-      "electron/**/*",
+      "electron/*.js",
+      "electron/*.html",
+      "electron/assets/**/*",
       "public/**/*",
       "package.json"
     ],
