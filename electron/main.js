@@ -192,23 +192,29 @@ app.whenReady().then(async () => {
 
     // find path to python/cxfreeze reticulum meshchat executable
     const exeName = process.platform === "win32" ? "ReticulumMeshChat.exe" : "ReticulumMeshChat";
-    var exe = path.join(__dirname, `build/exe/${exeName}`);
 
     debugLog('[EXE SEARCH] __dirname:', __dirname);
-    debugLog('[EXE SEARCH] Looking for exe at:', exe);
-    debugLog('[EXE SEARCH] exe exists?', fs.existsSync(exe));
 
-    // if exe doesn't exist, check ASAR unpacked directory (when asar is enabled)
-    if(!fs.existsSync(exe)){
+    // IMPORTANT: Check ASAR unpacked directory FIRST!
+    // Executables cannot be run from inside ASAR archive, even though fs.existsSync() returns true for them.
+    // When asar is enabled, executables are in app.asar.unpacked, not app.asar
+    var exe;
+    if(__dirname.includes('app.asar')){
+        // We're running from ASAR - use unpacked directory
         exe = path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), `build/exe/${exeName}`);
-        debugLog('[EXE SEARCH] Trying ASAR unpacked path:', exe);
-        debugLog('[EXE SEARCH] exe exists?', fs.existsSync(exe));
+        debugLog('[EXE SEARCH] Running from ASAR, using unpacked path:', exe);
+    } else {
+        // Development mode or local build
+        exe = path.join(__dirname, `build/exe/${exeName}`);
+        debugLog('[EXE SEARCH] Not in ASAR, using regular path:', exe);
     }
 
-    // if dist exe doesn't exist, check local build
+    debugLog('[EXE SEARCH] exe exists?', fs.existsSync(exe));
+
+    // Fallback to parent directory (for local development builds)
     if(!fs.existsSync(exe)){
         exe = path.join(__dirname, '..', `build/exe/${exeName}`);
-        debugLog('[EXE SEARCH] Trying local build path:', exe);
+        debugLog('[EXE SEARCH] Trying parent directory:', exe);
         debugLog('[EXE SEARCH] exe exists?', fs.existsSync(exe));
     }
 
